@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const MongoClient = require('mongodb').MongoClient;
+const ObjectId = require('mongodb').ObjectID;
 require('dotenv').config()
 
 app.use(cors());
@@ -18,12 +19,22 @@ client.connect(err => {
     const serviceCollection = client.db("FitnessFreakDB").collection("services");
     const reviewCollection = client.db("FitnessFreakDB").collection("reviews");
     console.log('connected')
+
     app.get('/services',(req,res) => {
         serviceCollection.find({})
             .toArray((err, documents) => {
                 res.send(documents);
             })
     })
+    
+    app.get('/service/:id', (req, res) => {
+        const id = req.params.id;
+        serviceCollection.find({ _id: ObjectId(id) })
+            .toArray((err, documents) => {
+                res.send(documents);
+            })
+    })
+
     app.get('/reviews', (req, res) => {
         reviewCollection.find({})
             .toArray((err, documents) => {
