@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectID;
+const { response } = require('express');
 require('dotenv').config()
 
 app.use(cors());
@@ -20,6 +21,7 @@ client.connect(err => {
     const reviewCollection = client.db("FitnessFreakDB").collection("reviews");
     const orderCollection = client.db("FitnessFreakDB").collection("order");
     const usersCollection = client.db("FitnessFreakDB").collection("users");
+    const adminsCollection = client.db("FitnessFreakDB").collection("admins");
     console.log('connected')
 
     app.get('/services', (req, res) => {
@@ -44,6 +46,39 @@ client.connect(err => {
             })
     })
 
+    app.get('/adminRole/:email', (req, res) => {
+        const mail = req.params;
+        adminsCollection.find({email : mail.email})
+        .toArray((err,document) => {
+            res.send(document[0])
+        })
+    })
+    
+    app.patch('/updateOrder/:id',(req,res) => {
+        const id = req.params.id;
+        const status = req.body.order;
+        console.log(status,id)
+        orderCollection.updateOne({ _id: ObjectId(id)},{
+            $set : {orderStatus : status}
+        })
+        .then(result => console.log(result))
+    })
+
+    app.post('/orders', (req, res) => {
+        const email = req.body.mail;
+        adminsCollection.find({ email: email })
+            .toArray((err, adminProfile) => {
+                const filter = {}
+                if (adminProfile.length === 0) {
+                    filter.email = email;
+                }
+                orderCollection.find(filter)
+                    .toArray((err, documents) => {
+                        res.send(documents);
+                    })
+            })
+    })
+
     app.post('/addOrder', (req, res) => {
         const doc = req.body;
         orderCollection.insertOne(doc)
@@ -63,6 +98,15 @@ client.connect(err => {
         const doc = req.body;
         reviewCollection.insertOne(doc)
             .then(result => console.log(result))
+    })
+
+    app.post('/addAdmin', (req, res) => {
+        const doc = req.body;
+        adminsCollection.insertOne(doc)
+            .then(result => {
+                console.log(result);
+                res.send('Admin added successfully')
+            })
     })
 
     app.post('/addUser', (req, res) => {
