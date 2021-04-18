@@ -53,6 +53,13 @@ client.connect(err => {
             res.send(document[0])
         })
     })
+
+    app.get('/services',(req,res) => {
+        serviceCollection.find({})
+        .toArray((err,document) => {
+            res.send(document);
+        })
+    })
     
     app.patch('/updateOrder/:id',(req,res) => {
         const id = req.params.id;
@@ -122,6 +129,14 @@ client.connect(err => {
                 }
             })
 
+    })
+
+    app.delete('/delete/:id', (req, res) => {
+        serviceCollection.deleteOne({ _id: ObjectId(req.params.id) })
+        .then(result => {
+            console.log(result);
+            res.send("Deleted");
+        })
     })
 });
 
